@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from 'express'
+import mongoose from "mongoose";
 import Hello from "./hello.js"
 import Lab5 from "./Lab5/index.js";
 import UserRoutes from "./Kambaz/Users/routes.js";
@@ -9,6 +10,10 @@ import AssignmentRoutes from "./Kambaz/Assignments/routes.js";
 import EnrollmentRoutes from "./Kambaz/Enrollments/routes.js";
 import cors from "cors";
 import session from "express-session";
+
+const CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING;
+mongoose.connect(CONNECTION_STRING);
+// Connect to MongoDB using the connection string from environment variables
 
 const app = express();
 
