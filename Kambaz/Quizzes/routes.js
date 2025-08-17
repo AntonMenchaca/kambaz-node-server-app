@@ -1,4 +1,5 @@
 import * as quizzesDao from "./dao.js";
+import * as quizAttemptsDao from "../QuizAttempts/dao.js";
 
 export default function QuizRoutes(app) {
 
@@ -44,6 +45,11 @@ export default function QuizRoutes(app) {
     const { quizId } = req.params;
     try {
       const status = await quizzesDao.updateQuiz(quizId, req.body);
+      
+      // Reset all attempts for this quiz when faculty edits it
+      // This ensures students don't have attempts on outdated quiz versions
+      await quizAttemptsDao.deleteAllAttemptsForQuiz(quizId);
+      
       res.json(status);
     } catch (error) {
       res.status(400).json(error);

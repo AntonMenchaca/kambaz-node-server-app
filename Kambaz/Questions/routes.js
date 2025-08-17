@@ -1,4 +1,5 @@
 import * as questionsDao from "./dao.js";
+import * as quizAttemptsDao from "../QuizAttempts/dao.js";
 
 export default function QuestionRoutes(app) {
 
@@ -33,6 +34,10 @@ export default function QuestionRoutes(app) {
     };
     try {
       const newQuestion = await questionsDao.createQuestion(question);
+      
+      // Reset all attempts for this quiz when questions are added
+      await quizAttemptsDao.deleteAllAttemptsForQuiz(quizId);
+      
       res.json(newQuestion);
     } catch (error) {
       res.status(400).json(error);
@@ -43,7 +48,16 @@ export default function QuestionRoutes(app) {
   app.put("/api/questions/:questionId", async (req, res) => {
     const { questionId } = req.params;
     try {
+      // First get the question to find the quiz ID
+      const question = await questionsDao.findQuestionById(questionId);
+      
       const status = await questionsDao.updateQuestion(questionId, req.body);
+      
+      // Reset all attempts for this quiz when questions are updated
+      if (question && question.quiz) {
+        await quizAttemptsDao.deleteAllAttemptsForQuiz(question.quiz);
+      }
+      
       res.json(status);
     } catch (error) {
       res.status(400).json(error);
@@ -54,7 +68,16 @@ export default function QuestionRoutes(app) {
   app.delete("/api/questions/:questionId", async (req, res) => {
     const { questionId } = req.params;
     try {
+      // First get the question to find the quiz ID
+      const question = await questionsDao.findQuestionById(questionId);
+      
       const status = await questionsDao.deleteQuestion(questionId);
+      
+      // Reset all attempts for this quiz when questions are deleted
+      if (question && question.quiz) {
+        await quizAttemptsDao.deleteAllAttemptsForQuiz(question.quiz);
+      }
+      
       res.json(status);
     } catch (error) {
       res.status(400).json(error);
