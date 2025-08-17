@@ -58,6 +58,23 @@ export default function QuizAttemptRoutes(app) {
     }
   });
 
+  // Alternative route for starting attempts (used by frontend)
+  app.post("/api/quizzes/:quizId/attempts/start", async (req, res) => {
+    const { quizId } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    try {
+      const newAttempt = await quizAttemptsDao.createAttempt(userId, quizId);
+      res.json(newAttempt);
+    } catch (error) {
+      res.status(400).json(error);
+    }
+  });
+
   // Submit an attempt with answers
   app.put("/api/attempts/:attemptId/submit", async (req, res) => {
     const { attemptId } = req.params;
@@ -72,14 +89,18 @@ export default function QuizAttemptRoutes(app) {
       // Get all questions for this quiz to calculate scores
       const questions = await questionsDao.findQuestionsForQuiz(attempt.quiz);
       let totalScore = 0;
-      let totalPoints = 0;
+
+      // Calculate total points from ALL questions in the quiz
+      const totalPoints = questions.reduce((sum, question) => sum + (question.points || 0), 0);
 
       // Process each answer
       const processedAnswers = answers.map(answer => {
-        const question = questions.find(q => q._id === answer.question);
-        if (!question) return answer;
+        const question = questions.find(q => q._id.toString() === answer.question.toString());
+        if (!question) {
+          console.log(`Question not found for answer: ${answer.question}`);
+          return answer;
+        }
 
-        totalPoints += question.points;
         let isCorrect = false;
         let pointsEarned = 0;
 

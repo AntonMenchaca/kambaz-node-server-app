@@ -14,7 +14,7 @@ export function findAttemptsForUser(userId) {
 }
 
 export function findAttemptsForUserAndQuiz(userId, quizId) {
-  return model.find({ user: userId, quiz: quizId }).sort({ attempt: -1 });
+  return model.find({ user: userId, quiz: quizId }).sort({ attempt: -1, submittedAt: -1 });
 }
 
 export function findLatestAttemptForUserAndQuiz(userId, quizId) {
@@ -37,7 +37,8 @@ export async function createAttempt(userId, quizId) {
     attempt: attemptNumber,
     answers: [],
     score: 0,
-    totalPoints: 0
+    totalPoints: 0,
+    startedAt: new Date()
   };
 
   return model.create(newAttempt);
